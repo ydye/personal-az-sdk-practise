@@ -1,0 +1,1 @@
+# personal-az-sdk-practise
