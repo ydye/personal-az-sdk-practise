@@ -1,17 +1,22 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
+	"github.com/ydye/personal-az-sdk-practise/pkg/client"
+	"path/filepath"
 	"strings"
 
 	"github.com/ydye/personal-az-sdk-practise/pkg/api"
+	"github.com/ydye/personal-az-sdk-practise/pkg/helpers"
 	"github.com/ydye/personal-az-sdk-practise/pkg/vm"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	ini "gopkg.in/ini.v1"
 )
 
 const (
@@ -102,9 +107,80 @@ func (authArgs *authArgs) validateAuthArgs() error {
 		return errors.New("--auth-method is a required parameter")
 	}
 
-	if
+	if authArgs.AuthMethod == "client_secret" || authArgs.AuthMethod == "client_certificate" {
+		authArgs.ClientID, err = uuid.Parse(authArgs.rawClientID)
+		if err != nil {
+			return errors.Wrap(err, "test")
+		}
+		if authArgs.AuthMethod == "client_secret" {
+			if authArgs.ClientSecret == "" {
+				return errors.New(`--client-secret must be specified when --auth-method="client_secret"`)
+			}
+		} else if authArgs.AuthMethod == "client_certificate" {
+			if authArgs.CertificatePath == "" || authArgs.PrivateKeyPath == "" {
+				return errors.New(`--certificate-path and --private-key-path must be specified when --auth-method="client_certificate"`)
+			}
+		}
+	}
+
+	authArgs.SubscriptionID, _ = uuid.Parse(authArgs.rawSubscriptionID)
+	if authArgs.SubscriptionID.String() == "00000000-0000-0000-0000-000000000000" {
+		var subID uuid.UUID
+		subID, err = getSubFromAzDir(filepath.Join(helpers.GetHomeDir(), ".azure"))
+		if err != nil || subID.String() == "00000000-0000-0000-0000-000000000000" {
+			return errors.New("--subscription-id is required (and must be a valid UUID)")
+		}
+		logrus.Infoln("No subscription provided, using selected subscription from azure CLI:", subID.String())
+		authArgs.SubscriptionID = subID
+	}
+
+	if _, err = azure.EnvironmentFromName(authArgs.RawAzureEnvironment); err != nil {
+		return errors.New("failed to parse --azure-env as a valid target Azure cloud environment")
+	}
 }
 
-func (authArgs *authArgs) getClient() {
+func getSubFromAzDir(root string) (uuid.UUID, error) {
+	subConfig, err := ini.Load(filepath.Join(root, "clouds.config"))
+	if err != nil {
+		return uuid.UUID{}, errors.Wrap(err, "error decoding cloud subscription config")
+	}
 
+	cloudConfig, err := ini.Load(filepath.Join(root, "config"))
+	if err != nil {
+		return uuid.UUID{}, errors.Wrap(err, "error decoding cloud config")
+	}
+
+	cloud := getSelectedCloudFromAzConfig(cloudConfig)
+	return getCloudSubFromAzConfig(cloud, subConfig)
+}
+
+func getSelectedCloudFromAzConfig(f *ini.File) string {
+	selectedCloud := "AzureCloud"
+	if cloud, err := f.GetSection("cloud"); err == nil {
+		if name, err := cloud.GetKey("name"); err == nil {
+			if s := name.String(); s != "" {
+				selectedCloud = s
+			}
+		}
+	}
+	return selectedCloud
+}
+
+func getCloudSubFromAzConfig(cloud string, f *ini.File) (uuid.UUID, error) {
+	cfg, err := f.GetSection(cloud)
+	if err != nil {
+		return uuid.UUID{}, errors.New("could not find user defined subscription id")
+	}
+	sub, err := cfg.GetKey("subscription")
+	if err != nil {
+		return uuid.UUID{}, errors.Wrap(err, "error reading subscription id from cloud config")
+	}
+	return uuid.Parse(sub.String())
+}
+
+func (authArgs *authArgs) getClient() (client.AzureEngineClient, error) {
+	if authArgs.isAzureStackCloud() {
+		return authArgs.getAzureStackClient()
+	}
+	return authArgs.getAzureClient()
 }
