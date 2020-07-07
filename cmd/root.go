@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -92,6 +93,16 @@ func (authArgs *authArgs) getAuthArgs() *authArgs {
 
 func (authArgs *authArgs) isAzureStackCloud() bool {
 	return strings.EqualFold(authArgs.RawAzureEnvironment, api.AzureStackCloud)
+}
+
+func (authArgs *authArgs) validateAuthArgs() error {
+	var err error
+
+	if authArgs.AuthMethod == "" {
+		return errors.New("--auth-method is a required parameter")
+	}
+
+	if
 }
 
 func (authArgs *authArgs) getClient() {
