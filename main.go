@@ -3,7 +3,7 @@ package main
 import (
 	colorable "github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
-	"github.com/ydye/personal-az-sdk-practise/resourcegroup-vm-list/cmd"
+	"github.com/ydye/personal-az-sdk-practise/cmd"
 )
 
 func main() {

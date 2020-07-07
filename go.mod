@@ -1,9 +1,9 @@
-module resourcegroup-vm-list
+module personal-az-sdk-practise
 
 go 1.14
 
 require (
-	github.com/google/uuid v1.1.1 // indirect
+	github.com/google/uuid v1.1.1
 	github.com/mattn/go-colorable v0.1.7
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0

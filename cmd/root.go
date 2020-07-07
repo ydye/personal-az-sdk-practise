@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ydye/personal-az-sdk-practise/resourcegroup-vm-list/pkg/api"
-	"github.com/ydye/personal-az-sdk-practise/resourcegroup-vm-list/pkg/vm"
+	"github.com/ydye/personal-az-sdk-practise/pkg/api"
+	"github.com/ydye/personal-az-sdk-practise/pkg/vm"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
