@@ -137,6 +137,36 @@ func (authArgs *authArgs) validateAuthArgs() error {
 	if _, err = azure.EnvironmentFromName(authArgs.RawAzureEnvironment); err != nil {
 		return errors.New("failed to parse --azure-env as a valid target Azure cloud environment")
 	}
+	return nil
+}
+
+func (authArgs *authArgs) getAzureClient() (client.AzureEngineClient, error) {
+	var newAzureClient *client.AzureClient
+	env, err := azure.EnvironmentFromName(authArgs.RawAzureEnvironment)
+	if err != nil {
+		return nil, err
+	}
+	switch authArgs.AuthMethod {
+	case "cli":
+		newAzureClient, err = armhelpers.NewAzureClientWithCLI(env, authArgs.SubscriptionID.String())
+	case "device":
+		newAzureClient, err = armhelpers.NewAzureClientWithDeviceAuth(env, authArgs.SubscriptionID.String())
+	case "client_secret":
+		newAzureClient, err = client.NewAzureClientWithClientSecret(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.ClientSecret)
+	case "client_certificate":
+		newAzureClient, err = armhelpers.NewAzureClientWithClientCertificateFile(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.CertificatePath, authArgs.PrivateKeyPath)
+	default:
+		return nil, errors.Errorf("--auth-method: ERROR: method unsupported. method=%q", authArgs.AuthMethod)
+	}
+	if err != nil {
+		return nil, err
+	}
+	err = newAzureClient.EnsureProvidersRegistered(authArgs.SubscriptionID.String())
+	if err != nil {
+		return nil, err
+	}
+	newAzureClient.AddAcceptLanguages([]string{authArgs.language})
+	return newAzureClient, nil
 }
 
 func getSubFromAzDir(root string) (uuid.UUID, error) {
