@@ -62,7 +62,7 @@ func run() error {
 
 type authProvider interface {
 	getAuthArgs() *authArgs
-	getClient()
+	getClient() (client.AzureEngineClient, error)
 }
 
 type authArgs struct {
@@ -147,14 +147,10 @@ func (authArgs *authArgs) getAzureClient() (client.AzureEngineClient, error) {
 		return nil, err
 	}
 	switch authArgs.AuthMethod {
-	case "cli":
-		newAzureClient, err = armhelpers.NewAzureClientWithCLI(env, authArgs.SubscriptionID.String())
-	case "device":
-		newAzureClient, err = armhelpers.NewAzureClientWithDeviceAuth(env, authArgs.SubscriptionID.String())
 	case "client_secret":
 		newAzureClient, err = client.NewAzureClientWithClientSecret(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.ClientSecret)
 	case "client_certificate":
-		newAzureClient, err = armhelpers.NewAzureClientWithClientCertificateFile(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.CertificatePath, authArgs.PrivateKeyPath)
+		newAzureClient, err = client.NewAzureClientWithClientCertificateFile(env, authArgs.SubscriptionID.String(), authArgs.ClientID.String(), authArgs.CertificatePath, authArgs.PrivateKeyPath)
 	default:
 		return nil, errors.Errorf("--auth-method: ERROR: method unsupported. method=%q", authArgs.AuthMethod)
 	}

@@ -34,19 +34,11 @@ type AzureEngineClient interface {
 	// AddAuxiliaryTokens sets the list of aux tokens to accept on this request
 	AddAuxiliaryTokens(tokens []string)
 
-	// RESOURCES
-
-	// DeployTemplate can deploy a template into Azure ARM
-	DeployTemplate(ctx context.Context, resourceGroup, name string, template, parameters map[string]interface{}) (resources.DeploymentExtended, error)
-
 	// EnsureResourceGroup ensures the specified resource group exists in the specified location
 	EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error)
 
 	// ListLocations returns all the Azure locations to which AKS Engine can deploy
 	ListLocations(ctx context.Context) (*[]subscriptions.Location, error)
-
-	//
-	// COMPUTE
 
 	// ListVirtualMachines lists VM resources
 	ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error)
