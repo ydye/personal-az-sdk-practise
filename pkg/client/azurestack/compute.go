@@ -1,18 +1,21 @@
-package client
+package azurestack
 
 import (
 	"context"
 	"fmt"
 	azcompute "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
+	"github.com/ydye/personal-az-sdk-practise/pkg/client"
 )
 
-// ListVirtualMachines returns (the first page of) the machines in the specified resource group.
-func (this *AzureClient) ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error) {
+func (this *AzureClient) ListVirtualMachines(ctx context.Context, resourceGroup string) (client.VirtualMachineListResultPage, error) {
 	page, err := this.virtualMachinesClient.List(ctx, resourceGroup)
-	return &page, err
+	c := this.virtualMachinesClient{
+		vmlrp: page,
+		err:   err,
+	}
+	return &c, err
 }
 
-// GetVirtualMachine returns the specified machine in the specified resource group.
 func (this *AzureClient) GetVirtualMachine(ctx context.Context, resourceGroup, name string) (azcompute.VirtualMachine, error) {
 	vm, err := this.virtualMachinesClient.Get(ctx, resourceGroup, name, "")
 	azVM := azcompute.VirtualMachine{}

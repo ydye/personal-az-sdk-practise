@@ -1,4 +1,4 @@
-package client
+package azurestack
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 )
 
-// EnsureResourceGroup ensures the named resource group exists in the given location.
 func (this *AzureClient) EnsureResourceGroup(ctx context.Context, name, location string, managedBy *string) (resourceGroup *resources.Group, err error) {
 	var tags map[string]*string
 	group, err := this.groupsClient.Get(ctx, name)
@@ -27,12 +26,10 @@ func (this *AzureClient) EnsureResourceGroup(ctx context.Context, name, location
 	return &response, nil
 }
 
-// CheckResourceGroupExistence return if the resource group exists
 func (this *AzureClient) CheckResourceGroupExistence(ctx context.Context, name string) (result autorest.Response, err error) {
 	return this.groupsClient.CheckExistence(ctx, name)
 }
 
-// DeleteResourceGroup delete the named resource group
 func (this *AzureClient) DeleteResourceGroup(ctx context.Context, name string) error {
 	future, err := this.groupsClient.Delete(ctx, name)
 	if err != nil {

@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	rootName             = "practise-vm-list"
+	rootName             = "practise-az"
 	rootShortDescription = "example"
 	rootLongDescription  = "example"
 )
